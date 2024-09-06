@@ -1,0 +1,11 @@
+.direnv
+
+*.beam
+*.ez
+/build
+erl_crash.dump
+
+client/build
+client/node_modules
+
+Dockerfile

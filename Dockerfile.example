@@ -1,0 +1,32 @@
+FROM ghcr.io/gleam-lang/gleam:v1.4.0-node as server-builder
+
+WORKDIR /app
+
+COPY . .
+
+RUN gleam build
+
+FROM node:20 as client-builder
+
+WORKDIR /app
+
+COPY ./client .
+
+RUN npm install
+
+RUN npm run build
+
+FROM denoland/deno:1.45.2 as runtime
+
+WORKDIR /app
+
+COPY --from=server-builder /app/build/dev/javascript/ /app/server
+COPY --from=client-builder /app/build/ /app/client/build
+COPY --from=client-builder /app/static/ /app/client/static
+
+COPY entrypoint.mjs .
+
+ENV USERNAME=<username>
+ENV PASSWORD=<password>
+
+CMD ["deno", "run", "--allow-net", "--allow-read", "--allow-env", "entrypoint.mjs"]

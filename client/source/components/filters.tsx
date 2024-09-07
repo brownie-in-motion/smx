@@ -278,6 +278,7 @@ export const Filters = ({
                 </Accordion.Control>
                 <Accordion.Panel mah="100%" pb="lg">
                     <ScrollArea
+                        type="always"
                         className="scrollarea-inherit"
                         scrollbars="y"
                         mah="inherit"

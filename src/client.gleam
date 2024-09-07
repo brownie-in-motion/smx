@@ -12,10 +12,9 @@ import gleam/result
 import schemas
 
 pub const endpoint = "data.stepmaniax.com"
-const uuid = "18d0da75-0ff3-4e8e-be23-a555eb1a4b4f"
 
 pub opaque type AuthData {
-    AuthData(id: Int, token: String)
+    AuthData(id: Int, token: String, uuid: String)
 }
 
 pub type ClientError {
@@ -38,19 +37,21 @@ fn lift_parse(
 fn fetch_data(
     path: String,
     data: schemas.Entries,
-    auth: Option(AuthData),
+    // using Result as coproduct but this might not be idiomatic
+    auth: Result(AuthData, String),
     query: List(#(String, String))
 ) -> request.Request(String) {
     let data = list.concat([
         data,
-        [#("uuid", json.string(uuid))],
         case auth {
-            None -> [
+            Error(uuid) -> [
+                #("uuid", json.string(uuid)),
                 #("noAuth", json.bool(True)),
             ]
-            Some(AuthData(id, token)) -> [
+            Ok(AuthData(id, token, uuid)) -> [
                 #("auth_gamer", json.int(id)),
                 #("auth_token", json.string(token)),
+                #("uuid", json.string(uuid)),
             ]
         },
     ])
@@ -71,24 +72,30 @@ fn fetch_data(
 }
 
 pub fn generate_auth(
+    uuid: String,
     username: String,
     password: String,
 ) -> Promise(Result(AuthData, ClientError)) {
     let data = schemas.SignInRequest(username, password)
 
-    let req = fetch_data("/sign/in", schemas.from_sign_in_req(data), None, [])
+    let req = fetch_data(
+        "/sign/in",
+        schemas.from_sign_in_req(data),
+        Error(uuid),
+        [],
+    )
 
     use resp <- promise.try_await(fetch.send(req) |> lift_fetch)
     use resp <- promise.map_try(fetch.read_text_body(resp) |> lift_fetch)
     use resp <- result.map(schemas.to_sign_in_res(resp.body) |> lift_parse)
 
-    AuthData(resp.account_id, resp.token)
+    AuthData(resp.account_id, resp.token, uuid)
 }
 
 pub fn list_songs(
     auth: AuthData,
 ) -> Promise(Result(List(schemas.Song), ClientError)) {
-    let req = fetch_data("/song/list", [], Some(auth), [])
+    let req = fetch_data("/song/list", [], Ok(auth), [])
 
     use resp <- promise.try_await(fetch.send(req) |> lift_fetch)
     use resp <- promise.map_try(fetch.read_text_body(resp) |> lift_fetch)
@@ -105,7 +112,7 @@ pub fn search_players(
     let req = fetch_data(
         "/gamer/search",
         schemas.from_search_req(data),
-        Some(auth),
+        Ok(auth),
         [],
     )
 
@@ -124,7 +131,7 @@ pub fn list_unplayed_charts(
     let req = fetch_data(
         "/gamer/score/unplayed",
         schemas.from_score_search_req(data),
-        Some(auth),
+        Ok(auth),
         [],
     )
 
@@ -145,7 +152,7 @@ pub fn list_scores(
     let req = fetch_data(
         "/gamer/score/history",
         schemas.from_score_search_req(data),
-        Some(auth),
+        Ok(auth),
         [],
     )
 
@@ -182,13 +189,13 @@ pub fn list_high_scores(
         Some(id) -> fetch_data(
             "/highscores/users/" <> int.to_string(id) <> "/" <> difficulty,
             [],
-            Some(auth),
+            Ok(auth),
             [],
         )
         None -> fetch_data(
             "/highscores/region/all/" <> difficulty,
             [],
-            Some(auth),
+            Ok(auth),
             [],
         )
     }

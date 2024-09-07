@@ -28,5 +28,6 @@ COPY entrypoint.mjs .
 
 ENV USERNAME=<username>
 ENV PASSWORD=<password>
+ENV UUID=<uuid>
 
 CMD ["deno", "run", "--allow-net", "--allow-read", "--allow-env", "entrypoint.mjs"]

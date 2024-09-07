@@ -7,14 +7,13 @@ export const UserSelect = ({
     user,
     onChange,
 }: {
-    user?: User
-    onChange?: (user: User | null) => void
+    user: User
+    onChange: (user: User | null) => void
 }) => {
     const combobox = useCombobox({
         onDropdownClose: () => combobox.resetSelectedOption(),
     })
 
-    const [value, setValue] = useState<User | null>(user)
     const [search, setSearch] = useState(
         user?.name || '',
     )
@@ -45,9 +44,8 @@ export const UserSelect = ({
             withinPortal={false}
             onOptionSubmit={(val) => {
                 const user = data?.find((item) => item.name === val) ?? null
-                setValue(user)
                 setSearch(val)
-                onChange?.(user)
+                onChange(user)
                 combobox.closeDropdown()
             }}
         >
@@ -55,14 +53,13 @@ export const UserSelect = ({
                 <InputBase
                     size='lg'
                     rightSection={
-                        value !== null ? (
+                        user !== null ? (
                             <CloseButton
                                 size="md"
                                 onMouseDown={(event) => event.preventDefault()}
                                 onClick={() => {
-                                    setValue(null)
                                     setSearch('')
-                                    onChange?.(null)
+                                    onChange(null)
                                 }}
                                 aria-label="Clear value"
                             />
@@ -80,10 +77,10 @@ export const UserSelect = ({
                     onFocus={() => combobox.openDropdown()}
                     onBlur={() => {
                         combobox.closeDropdown()
-                        setSearch(value?.name || '')
+                        setSearch(user?.name || '')
                     }}
                     placeholder="Search users"
-                    rightSectionPointerEvents={value === null ? 'none' : 'all'}
+                    rightSectionPointerEvents={user === null ? 'none' : 'all'}
                 />
             </Combobox.Target>
 

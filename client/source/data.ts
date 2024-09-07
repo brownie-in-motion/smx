@@ -31,3 +31,11 @@ const powerPlaySongs = new Set([
 ])
 
 export const tags = new Map([['Power play', powerPlaySongs]])
+
+export const ratings = [
+    56_000, // 2
+    75_500, // 3
+    86_500, // 4
+    98_000, // 5
+    99_725, // 6
+]

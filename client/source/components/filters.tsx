@@ -1,5 +1,13 @@
-import { Button, MultiSelect, ScrollArea, SegmentedControl, Text } from '@mantine/core'
-import { tags } from '../data'
+import {
+    Button,
+    Group,
+    MultiSelect,
+    Rating,
+    ScrollArea,
+    SegmentedControl,
+    Text,
+} from '@mantine/core'
+import { ratings, tags } from '../data'
 
 export const sortOptions = ['Title', 'Score', 'Difficulty']
 
@@ -27,6 +35,17 @@ export const defaultFilter = (): FilterState => ({
     tags: [],
 })
 
+const toExactLowStars = (filter: FilterState): number | null => {
+    const [low, high] = filter.scoreRange
+    if (low !== 0 || !ratings.includes(high + 1)) return null
+    return ratings.indexOf(high + 1) + 2
+}
+
+const toExactHighStars = (filter: FilterState): number | null => {
+    const [low, high] = filter.scoreRange
+    if (high !== 100_000 || !ratings.includes(low)) return null
+    return ratings.indexOf(low) + 2
+}
 
 import {
     Accordion,
@@ -45,6 +64,11 @@ export const Filters = ({
     filter: FilterState
     setFilter: (filter: FilterState) => void
 }) => {
+    const [lowStars, highStars] = [
+        toExactLowStars(filter),
+        toExactHighStars(filter),
+    ]
+
     const [active, setActive] = useState(false)
 
     const value = active ? 'filter' : null
@@ -53,10 +77,12 @@ export const Filters = ({
     }, [])
 
     const inner = (
-        <Stack pb={1}> {/* need some padding for scrollbar interactions */ }
+        <Stack pb={1}>
+            {' '}
+            {/* need some padding for scrollbar interactions */}
             <Divider />
             <Stack gap="xs">
-                <Text size="sm">Score range</Text>
+                <Text size="md">Score range</Text>
                 <RangeSlider
                     minRange={1000}
                     min={0}
@@ -70,9 +96,41 @@ export const Filters = ({
                         })
                     }
                 />
+                <Stack gap="xs">
+                    <Group gap="xs">
+                        <Text size="sm">Less than</Text>
+                        <Rating
+                            count={6}
+                            value={lowStars}
+                            onChange={(value) => {
+                                if (value < 2) return
+                                const score = ratings[value - 2]
+                                setFilter({
+                                    ...filter,
+                                    scoreRange: [0, score - 1],
+                                })
+                            }}
+                        />
+                    </Group>
+                    <Group gap="xs">
+                        <Text size="sm">...or at least</Text>
+                        <Rating
+                            count={6}
+                            value={highStars}
+                            onChange={(value) => {
+                                if (value < 2) return
+                                const score = ratings[value - 2]
+                                setFilter({
+                                    ...filter,
+                                    scoreRange: [score, 100_000],
+                                })
+                            }}
+                        />
+                    </Group>
+                </Stack>
             </Stack>
             <Stack gap="xs">
-                <Text size="sm">Difficulty range</Text>
+                <Text size="md">Difficulty range</Text>
                 <RangeSlider
                     minRange={0}
                     min={1}
@@ -88,7 +146,7 @@ export const Filters = ({
                 />
             </Stack>
             <Stack gap="xs">
-                <Text size="sm">Played status</Text>
+                <Text size="md">Played status</Text>
                 <SegmentedControl
                     value={filter.charts}
                     data={[
@@ -96,9 +154,7 @@ export const Filters = ({
                         { label: 'Played', value: 'played' },
                         { label: 'Unplayed', value: 'unplayed' },
                     ]}
-                    onChange={(
-                        value: 'all' | 'played' | 'unplayed',
-                    ) =>
+                    onChange={(value: 'all' | 'played' | 'unplayed') =>
                         setFilter({
                             ...filter,
                             charts: value,
@@ -107,7 +163,7 @@ export const Filters = ({
                 />
             </Stack>
             <Stack gap="xs">
-                <Text size="sm">Cleared status</Text>
+                <Text size="md">Cleared status</Text>
                 <SegmentedControl
                     value={filter.cleared}
                     data={[
@@ -115,9 +171,7 @@ export const Filters = ({
                         { label: 'Cleared', value: 'cleared' },
                         { label: 'Failed', value: 'failed' },
                     ]}
-                    onChange={(
-                        value: 'all' | 'cleared' | 'failed',
-                    ) =>
+                    onChange={(value: 'all' | 'cleared' | 'failed') =>
                         setFilter({
                             ...filter,
                             cleared: value,
@@ -126,7 +180,7 @@ export const Filters = ({
                 />
             </Stack>
             <Stack gap="xs">
-                <Text size="sm">Song tags</Text>
+                <Text size="md">Song tags</Text>
                 <MultiSelect
                     data={Array.from(tags.keys())}
                     value={filter.tags}
@@ -140,7 +194,7 @@ export const Filters = ({
             </Stack>
             <Divider />
             <Stack gap="xs">
-                <Text size="sm">Sort first by...</Text>
+                <Text size="md">Sort first by...</Text>
                 <Select
                     allowDeselect={false}
                     value={filter.primary}
@@ -149,9 +203,8 @@ export const Filters = ({
                         let secondary = filter.secondary
                         if (value === filter.secondary) {
                             secondary =
-                                sortOptions.find(
-                                    (item) => item !== value,
-                                ) ?? null
+                                sortOptions.find((item) => item !== value) ??
+                                null
                         }
                         setFilter({
                             ...filter,
@@ -172,15 +225,11 @@ export const Filters = ({
                 />
             </Stack>
             <Stack gap="xs">
-                <Text size="sm">
-                    And if they're the same, by...
-                </Text>
+                <Text size="md">And if they're the same, by...</Text>
                 <Select
                     allowDeselect={false}
                     value={filter.secondary}
-                    data={sortOptions.filter(
-                        (item) => item !== filter.primary,
-                    )}
+                    data={sortOptions.filter((item) => item !== filter.primary)}
                     onChange={(value) =>
                         setFilter({
                             ...filter,
@@ -199,11 +248,7 @@ export const Filters = ({
                     label="Ascending?"
                 />
             </Stack>
-            <Button
-                onClick={() => setActive(false)}
-            >
-                Close
-            </Button>
+            <Button onClick={() => setActive(false)}>Close</Button>
             <Button
                 onClick={() => setFilter(defaultFilter())}
                 color="red"

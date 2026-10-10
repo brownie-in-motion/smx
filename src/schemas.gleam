@@ -48,8 +48,8 @@ pub type Song {
     Song(
         id: Int,
         game_song_id: Int,
-        is_enabled: Int,
-        allow_edits: Int,
+        is_enabled: Bool,
+        allow_edits: Bool,
         title: String,
         subtitle: String,
         artist: String,
@@ -65,7 +65,7 @@ pub type Song {
         first_ms: Int,
         last_ms: Int,
         cover_path: String,
-        website: String,
+        website: Option(String),
         created_at: String,
         updated_at: String,
         cover: String,
@@ -132,8 +132,8 @@ fn song_decode() -> dynamic.Decoder(Song) {
     })
     |> decoder.solve(dynamic.field("id", dynamic.int))
     |> decoder.solve(dynamic.field("game_song_id", dynamic.int))
-    |> decoder.solve(dynamic.field("is_enabled", dynamic.int))
-    |> decoder.solve(dynamic.field("allow_edits", dynamic.int))
+    |> decoder.solve(dynamic.field("is_enabled", dynamic.bool))
+    |> decoder.solve(dynamic.field("allow_edits", dynamic.bool))
     |> decoder.solve(dynamic.field("title", dynamic.string))
     |> decoder.solve(dynamic.field("subtitle", dynamic.string))
     |> decoder.solve(dynamic.field("artist", dynamic.string))
@@ -149,7 +149,9 @@ fn song_decode() -> dynamic.Decoder(Song) {
     |> decoder.solve(dynamic.field("first_ms", dynamic.int))
     |> decoder.solve(dynamic.field("last_ms", dynamic.int))
     |> decoder.solve(dynamic.field("cover_path", dynamic.string))
-    |> decoder.solve(dynamic.field("website", dynamic.string))
+    |> decoder.solve(
+        dynamic.field("website", dynamic.optional(dynamic.string))
+    )
     |> decoder.solve(dynamic.field("created_at", dynamic.string))
     |> decoder.solve(dynamic.field("updated_at", dynamic.string))
     |> decoder.solve(dynamic.field("cover", dynamic.string))
@@ -262,7 +264,7 @@ pub type Chart {
         difficulty_id: Int,
         game_difficulty_id: Int,
         steps_index: Int,
-        is_enabled: Int,
+        is_enabled: Bool,
         difficulty: Int,
         play_count: Int,
         pass_count: Int,
@@ -304,7 +306,7 @@ fn chart_decode() -> dynamic.Decoder(Chart) {
     |> decoder.solve(dynamic.field("difficulty_id", dynamic.int))
     |> decoder.solve(dynamic.field("game_difficulty_id", dynamic.int))
     |> decoder.solve(dynamic.field("steps_index", dynamic.int))
-    |> decoder.solve(dynamic.field("is_enabled", dynamic.int))
+    |> decoder.solve(dynamic.field("is_enabled", dynamic.bool))
     |> decoder.solve(dynamic.field("difficulty", dynamic.int))
     |> decoder.solve(dynamic.field("play_count", dynamic.int))
     |> decoder.solve(dynamic.field("pass_count", dynamic.int))
